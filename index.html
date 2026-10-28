@@ -1,0 +1,1503 @@
+<!doctype html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>敗家表</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#d0346c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="敗家表">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: price-tag hero, then stacked report cards; one column on phones, two on wide screens. Sticky header with tabs, floating "記一筆" button. */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --sunk: #e8ecf2;
+  --ink: #1b2130;
+  --ink-2: #545d70;
+  --ink-3: #8a93a6;
+  --line: #d9dee7;
+  --accent: #d0346c;
+  --accent-ink: #ffffff;
+  --accent-soft: #fbe3ec;
+  --gain: #0c7f72;
+  --gain-soft: #dcf2ee;
+  --warn: #a35d00;
+  --warn-soft: #fdf0d9;
+  --c0: #d0346c; --c1: #0f8b7e; --c2: #d98a00; --c3: #3a6fd8; --c4: #8a4fc8; --c5: #4f9a2f; --c6: #e0602d; --c7: #6b7689;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-num: "Barlow Condensed", "Arial Narrow", "Noto Sans TC", sans-serif;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(20, 28, 45, .06), 0 4px 14px rgba(20, 28, 45, .05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141b; --surface: #1a1f29; --sunk: #232a36; --ink: #e8ebf2; --ink-2: #aab2c2; --ink-3: #7a8396; --line: #2c3442;
+    --accent: #f0679a; --accent-ink: #1a0b12; --accent-soft: #3a1d29; --gain: #45c4b2; --gain-soft: #163430; --warn: #f0b04a; --warn-soft: #3a2d14;
+    --c0: #f0679a; --c1: #45c4b2; --c2: #f0b04a; --c3: #6f9cf5; --c4: #b48af0; --c5: #86c75e; --c6: #f58a5c; --c7: #8e98ab;
+    --shadow: 0 1px 2px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141b; --surface: #1a1f29; --sunk: #232a36; --ink: #e8ebf2; --ink-2: #aab2c2; --ink-3: #7a8396; --line: #2c3442;
+  --accent: #f0679a; --accent-ink: #1a0b12; --accent-soft: #3a1d29; --gain: #45c4b2; --gain-soft: #163430; --warn: #f0b04a; --warn-soft: #3a2d14;
+  --c0: #f0679a; --c1: #45c4b2; --c2: #f0b04a; --c3: #6f9cf5; --c4: #b48af0; --c5: #86c75e; --c6: #f58a5c; --c7: #8e98ab;
+  --shadow: 0 1px 2px rgba(0,0,0,.3);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; font-size: 14px; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* header */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; align-items: center; gap: 16px; padding-block: 10px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+.brand .tag { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: var(--accent-ink); font-weight: 900; font-size: 18px; padding: 3px 12px 3px 10px; border-radius: 6px 14px 14px 6px; letter-spacing: .08em; }
+.brand .tag::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--surface); }
+.brand small { color: var(--ink-3); font-size: 12px; }
+nav.tabs { display: flex; background: var(--sunk); border-radius: 999px; padding: 3px; }
+nav.tabs button { border: 0; background: transparent; padding: 5px 16px; border-radius: 999px; color: var(--ink-2); font-weight: 500; }
+nav.tabs button[aria-current="page"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+
+main { padding-block: 18px 110px; }
+.view { display: grid; gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; min-width: 0; }
+.card h2 { font-size: 15px; margin: 0 0 12px; display: flex; align-items: baseline; gap: 8px; text-wrap: balance; }
+.card h2 small { color: var(--ink-3); font-weight: 400; font-size: 12px; }
+.grid2 { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+
+/* hero */
+.hero { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 18px 16px; overflow: hidden; }
+.hero .eyebrow { color: var(--ink-3); font-size: 12px; letter-spacing: .12em; }
+.hero .big { font-size: clamp(44px, 11vw, 76px); font-weight: 700; line-height: 1; margin: 6px 0 4px; color: var(--ink); }
+.hero .big .cur { font-size: .42em; color: var(--accent); margin-right: 4px; vertical-align: .55em; }
+.hero .sub { color: var(--ink-2); font-size: 13px; }
+.hero .punch { position: absolute; right: 18px; top: 18px; width: 14px; height: 14px; border-radius: 50%; background: var(--bg); border: 1px solid var(--line); }
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border-top: 1px dashed var(--line); margin: 16px -18px -16px; }
+@media (min-width: 640px) { .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.stats > div { background: var(--surface); padding: 12px 18px; display: grid; gap: 2px; }
+.stats .k { font-size: 12px; color: var(--ink-3); }
+.stats .v { font-size: 26px; font-weight: 600; line-height: 1.1; }
+.stats .v.gain { color: var(--gain); }
+
+.banner { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 10px 14px; border-radius: 12px; font-size: 14px; }
+.banner.warn { background: var(--warn-soft); color: var(--warn); }
+.banner .grow { flex: 1 1 200px; min-width: 0; }
+
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 7px 14px; border-radius: 10px; font-weight: 500; }
+.btn:hover { border-color: var(--ink-3); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--accent); }
+.btn:disabled { opacity: .5; cursor: default; }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--sunk); color: var(--ink-2); white-space: nowrap; }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.sold { background: var(--gain-soft); color: var(--gain); }
+.chip.selling { background: var(--accent-soft); color: var(--accent); }
+.linkish { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 500; }
+
+/* charts */
+.chart { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--ink-3); font-family: var(--font-num); font-size: 12px; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .hit { fill: transparent; cursor: pointer; }
+.chart .hit:hover { fill: var(--sunk); opacity: .5; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--ink-2); margin-top: 8px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.note { font-size: 12px; color: var(--ink-3); margin-top: 8px; }
+
+.rank { display: grid; gap: 10px; }
+.rank button { display: grid; grid-template-columns: minmax(0, 7em) minmax(0, 1fr) auto; align-items: center; gap: 10px; border: 0; background: none; padding: 0; text-align: left; }
+.rank .name { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank .bar { height: 12px; background: var(--sunk); border-radius: 6px; overflow: hidden; display: flex; }
+.rank .bar span { display: block; height: 100%; }
+.rank .val { font-size: 17px; font-weight: 600; min-width: 5.5em; text-align: right; }
+.rank button:hover .name { color: var(--accent); }
+
+.curbar { display: flex; height: 18px; border-radius: 9px; overflow: hidden; background: var(--sunk); }
+.curbar span { display: block; height: 100%; }
+.curlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 16px; margin-top: 12px; font-size: 13px; }
+.curlist div { display: flex; justify-content: space-between; gap: 8px; }
+.curlist b { font-family: var(--font-num); font-size: 16px; font-weight: 600; }
+
+/* list */
+.filters { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 760px) { .filters { grid-template-columns: 2fr repeat(4, minmax(0, 1fr)) auto; } }
+.filters .q { grid-column: 1 / -1; }
+@media (min-width: 760px) { .filters .q { grid-column: auto; } }
+.field, .filters input, .filters select { width: 100%; min-width: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 10px; }
+.toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; white-space: nowrap; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--surface); }
+.summary-line { display: flex; justify-content: space-between; gap: 8px; color: var(--ink-2); font-size: 13px; flex-wrap: wrap; }
+.items { display: grid; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.row { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 11px 14px; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; width: 100%; }
+.row:last-child { border-bottom: 0; }
+.row:hover { background: var(--sunk); }
+.row .dot { width: 10px; height: 10px; border-radius: 3px; }
+.row .t { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .m { font-size: 12px; color: var(--ink-3); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 2px; }
+.row .p { text-align: right; display: grid; justify-items: end; gap: 2px; }
+.row .p b { font-family: var(--font-num); font-size: 18px; font-weight: 600; }
+.cabinet { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 640px) { .cabinet { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 920px) { .cabinet { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.cabinet > .empty { grid-column: 1 / -1; }
+.gcard { display: grid; gap: 6px; align-content: start; min-width: 0; padding: 6px 6px 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); text-align: left; }
+.gcard:hover { border-color: var(--cc); }
+.gcard .pic { position: relative; aspect-ratio: 1; max-width: 100%; border-radius: 10px; overflow: hidden; display: grid; place-items: center; background: color-mix(in srgb, var(--cc) 14%, var(--surface)); }
+.gcard .pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.gcard .ph-text { display: grid; gap: 4px; justify-items: center; padding: 10px; text-align: center; color: color-mix(in srgb, var(--cc) 75%, var(--ink)); min-width: 0; }
+.gcard .ph-text b { font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.gcard .ph-text small { font-size: 11px; opacity: .7; }
+.gcard .qty { position: absolute; right: 6px; bottom: 6px; background: var(--surface); color: var(--ink); border-radius: 999px; padding: 0 9px; font-size: 15px; font-weight: 600; box-shadow: var(--shadow); }
+.gcard .stt { position: absolute; left: 6px; top: 6px; }
+.gcard .flagdot { position: absolute; right: 8px; top: 8px; width: 9px; height: 9px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 2px var(--surface); }
+.gcard .nm { font-size: 14px; font-weight: 500; padding: 0 4px; line-height: 1.35; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.gcard .pr { padding: 0 4px; color: var(--accent); font-size: 17px; font-weight: 600; }
+.empty { text-align: center; padding: 40px 16px; color: var(--ink-3); }
+.empty b { display: block; color: var(--ink); font-size: 17px; margin-bottom: 4px; }
+
+/* fab */
+.fab { position: fixed; z-index: 6; right: max(18px, calc(env(safe-area-inset-right, 0px) + 12px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 16px; padding: 14px 22px; border-radius: 999px; box-shadow: 0 6px 20px rgba(208, 52, 108, .35); }
+
+/* sheet */
+.overlay { position: fixed; inset: 0; z-index: 20; background: rgba(10, 14, 22, .45); display: flex; justify-content: center; align-items: flex-end; }
+@media (min-width: 760px) { .overlay { align-items: center; } }
+.sheet { background: var(--surface); width: 100%; max-width: 640px; max-height: 92%; overflow-y: auto; border-radius: 18px 18px 0 0; padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px); }
+@media (min-width: 760px) { .sheet { border-radius: 18px; } }
+.sheet-head { position: sticky; top: 0; background: var(--surface); display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line); z-index: 1; }
+.sheet-head h3 { margin: 0 auto 0 0; font-size: 17px; }
+.form { display: grid; gap: 14px; padding: 16px 18px; }
+.form label.l { display: block; font-size: 12px; color: var(--ink-3); margin-bottom: 4px; letter-spacing: .04em; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.parts { display: grid; gap: 6px; }
+.part { display: grid; grid-template-columns: minmax(0, 1fr) 8.5em auto; gap: 6px; }
+.part .x { border: 0; background: none; color: var(--ink-3); padding: 0 6px; font-size: 18px; }
+.hkd { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); margin-top: 6px; }
+.hkd input { width: 8em; }
+.seg { display: flex; background: var(--sunk); border-radius: 10px; padding: 3px; }
+.seg button { flex: 1; border: 0; background: none; padding: 7px 2px; border-radius: 8px; color: var(--ink-2); white-space: nowrap; font-size: 13px; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: var(--shadow); }
+.photos { display: flex; flex-wrap: wrap; gap: 8px; }
+.photos .ph { position: relative; width: 84px; height: 84px; border-radius: 10px; overflow: hidden; background: var(--sunk); }
+.photos .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photos .ph button { position: absolute; top: 2px; right: 2px; border: 0; border-radius: 50%; width: 22px; height: 22px; background: rgba(0,0,0,.6); color: #fff; font-size: 13px; line-height: 1; }
+.photos .ph .cover { position: absolute; left: 0; right: 0; bottom: 0; background: var(--accent); color: var(--accent-ink); font-size: 11px; text-align: center; }
+.photos .ph .mkcover { top: auto; bottom: 3px; left: 3px; right: 3px; width: auto; height: 20px; border-radius: 6px; font-size: 11px; }
+.imp-bar { height: 8px; border-radius: 4px; background: var(--sunk); overflow: hidden; }
+.imp-bar span { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+.gcard .pcount { position: absolute; left: 6px; bottom: 6px; background: rgba(0,0,0,.55); color: #fff; border-radius: 999px; padding: 0 8px; font-size: 13px; }
+.gallery { position: relative; display: grid; place-items: center; background: color-mix(in srgb, var(--cc) 12%, var(--sunk)); min-height: 240px; }
+.gallery img { display: block; width: 100%; max-height: min(62vh, 560px); object-fit: contain; }
+.gallery-empty { display: grid; gap: 4px; justify-items: center; padding: 60px 16px; color: color-mix(in srgb, var(--cc) 75%, var(--ink)); text-align: center; }
+.gallery-empty b { font-size: 18px; }
+.gnav { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(0,0,0,.45); color: #fff; font-size: 26px; line-height: 1; }
+.gnav.prev { left: 10px; } .gnav.next { right: 10px; }
+.gcount { position: absolute; right: 10px; bottom: 10px; background: rgba(0,0,0,.55); color: #fff; border-radius: 999px; padding: 1px 10px; font-size: 14px; }
+.thumbs { display: flex; gap: 6px; overflow-x: auto; padding: 10px 18px 0; }
+.thumbs button { flex: 0 0 auto; width: 56px; height: 56px; padding: 0; border: 2px solid transparent; border-radius: 8px; overflow: hidden; background: var(--sunk); }
+.thumbs button[data-on] { border-color: var(--accent); }
+.thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dinfo { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; margin: 0; padding: 14px 18px; font-size: 14px; }
+.dinfo dt { color: var(--ink-3); }
+.dinfo dd { margin: 0; overflow-wrap: anywhere; }
+.dinfo small { color: var(--ink-3); }
+.photos .add { width: 84px; height: 84px; border: 1px dashed var(--ink-3); border-radius: 10px; display: grid; place-items: center; color: var(--ink-3); font-size: 12px; text-align: center; cursor: pointer; }
+.legacy { font-size: 12px; color: var(--ink-3); word-break: break-all; }
+.flagbox { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 13px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+details.raw { font-size: 12px; color: var(--ink-3); }
+details.raw pre { white-space: pre-wrap; word-break: break-all; background: var(--sunk); padding: 8px; border-radius: 8px; margin: 6px 0 0; }
+.sheet-foot { display: flex; gap: 8px; padding: 0 18px; flex-wrap: wrap; }
+.sheet-foot .grow { flex: 1; }
+.confirm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--accent); }
+
+/* settings */
+.set-list { display: grid; gap: 6px; }
+.set-row { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.set-row:last-child { border-bottom: 0; }
+.set-row .acts { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.set-row .acts .btn { padding: 4px 9px; font-size: 13px; }
+.rates { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.rates label { display: grid; grid-template-columns: 3.5em minmax(0, 1fr); align-items: center; gap: 6px; font-size: 13px; }
+.inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.inline .field { flex: 1 1 160px; width: auto; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); z-index: 30; background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 10px; font-size: 14px; max-width: calc(100% - 32px); }
+.skeleton { color: var(--ink-3); padding: 30px 0; text-align: center; }
+@media (prefers-reduced-motion: no-preference) { .overlay .sheet { animation: up .18s ease-out; } @keyframes up { from { transform: translateY(24px); opacity: .6; } } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><span class="tag">敗家表</span><small id="since">自 2012 年起</small></div>
+    <nav class="tabs" aria-label="分頁">
+      <button type="button" data-view="overview" aria-current="page">總覽</button>
+      <button type="button" data-view="list">清單</button>
+      <button type="button" data-view="cabinet">谷櫃</button>
+      <button type="button" data-view="settings">設定</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="view" id="v-overview"><div class="skeleton">載入緊你嘅敗家紀錄…</div></section>
+  <section class="view" id="v-list" hidden></section>
+  <section class="view" id="v-settings" hidden></section>
+</main>
+
+<button type="button" class="fab" id="fab">＋ 記一筆</button>
+<div id="sheet-root"></div>
+<div id="toast-root"></div>
+<input type="file" id="pkg-file" accept=".zip,application/zip" hidden>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+// Local-only backend: everything lives in this browser's IndexedDB. It answers the same
+// claude.use("db" | "assets" | "downloads" | "user") calls the app was written against.
+(() => {
+  const DB_NAME = 'baijia', DB_VER = 1;
+  let dbp = null;
+  const idb = () => dbp || (dbp = new Promise((res, rej) => {
+    const r = indexedDB.open(DB_NAME, DB_VER);
+    r.onupgradeneeded = () => { r.result.createObjectStore('docs'); r.result.createObjectStore('blobs'); };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  }));
+  // run fn(store) inside one transaction; resolves when the transaction commits
+  async function tx(store, mode, fn) {
+    const d = await idb();
+    return new Promise((res, rej) => {
+      const t = d.transaction(store, mode);
+      fn(t.objectStore(store));
+      t.oncomplete = () => res();
+      t.onerror = t.onabort = () => rej(t.error);
+    });
+  }
+  async function readAll(store) {
+    const d = await idb();
+    return new Promise((res, rej) => {
+      const t = d.transaction(store);
+      const s = t.objectStore(store);
+      const keys = s.getAllKeys(), vals = s.getAll();
+      t.oncomplete = () => res(keys.result.map((k, i) => [k, vals.result[i]]));
+      t.onerror = () => rej(t.error);
+    });
+  }
+
+  const docs = new Map(), blobs = new Map(), urls = new Map();
+  const ready = (async () => {
+    for (const [k, v] of await readAll('docs')) docs.set(k, v);
+    for (const [k, v] of await readAll('blobs')) blobs.set(k, v);
+  })();
+
+  const listeners = new Set();
+  const snapDoc = path => { const d = docs.get(path); return { id: path.split('/').pop(), exists: !!d, data: () => d, metadata: { fromCache: false, hasPendingWrites: false } }; };
+  const colSnap = col => { const ds = [...docs.keys()].filter(k => k.split('/')[0] === col).sort().map(snapDoc); return { docs: ds, size: ds.length, empty: !ds.length }; };
+  // a burst of writes (bulk photo import) reaches listeners once per tick
+  const pending = new Set();
+  let flushing = false;
+  function changed(path) {
+    pending.add(path);
+    if (flushing) return;
+    flushing = true;
+    setTimeout(() => {
+      flushing = false;
+      const paths = [...pending]; pending.clear();
+      for (const l of listeners) {
+        if (l.doc && paths.includes(l.doc)) l.cb(snapDoc(l.doc));
+        if (l.col && paths.some(p => p.split('/')[0] === l.col)) l.cb(colSnap(l.col));
+      }
+    }, 0);
+  }
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const merge = (a, b) => {
+    for (const [k, v] of Object.entries(b)) {
+      if (v && typeof v === 'object' && !Array.isArray(v) && a[k] && typeof a[k] === 'object' && !Array.isArray(a[k])) merge(a[k], v);
+      else a[k] = v;
+    }
+    return a;
+  };
+  async function put(path, val) { docs.set(path, val); await tx('docs', 'readwrite', s => s.put(val, path)); changed(path); }
+
+  const db = {
+    doc(path) {
+      return {
+        id: path.split('/').pop(), path,
+        async get() { await ready; return snapDoc(path); },
+        async set(d) { await ready; await put(path, clone(d)); },
+        async update(d) {
+          await ready;
+          if (!docs.has(path)) throw { code: 'invalid_argument', message: 'document does not exist' };
+          await put(path, merge(clone(docs.get(path)), clone(d)));
+        },
+        async delete() { await ready; docs.delete(path); await tx('docs', 'readwrite', s => s.delete(path)); changed(path); },
+        onSnapshot(cb) { const l = { doc: path, cb }; listeners.add(l); ready.then(() => listeners.has(l) && cb(snapDoc(path))); return () => listeners.delete(l); },
+      };
+    },
+    collection(col) {
+      return {
+        doc: id => db.doc(col + '/' + id),
+        onSnapshot(cb) { const l = { col, cb }; listeners.add(l); ready.then(() => listeners.has(l) && cb(colSnap(col))); return () => listeners.delete(l); },
+      };
+    },
+  };
+
+  function blobURL(id) {
+    if (!urls.has(id)) {
+      const b = blobs.get(id);
+      if (!b) return '';
+      urls.set(id, URL.createObjectURL(b));
+    }
+    return urls.get(id);
+  }
+  const newBlobId = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const assets = {
+    async upload(blob, opts = {}) {
+      await ready;
+      const id = newBlobId();
+      const b = opts.type && blob.type !== opts.type ? new Blob([blob], { type: opts.type }) : blob;
+      blobs.set(id, b);
+      await tx('blobs', 'readwrite', s => s.put(b, id));
+      return { id, url: blobURL(id), sizeBytes: b.size, contentType: b.type };
+    },
+    async delete(id) {
+      const u = urls.get(id);
+      if (u) URL.revokeObjectURL(u);
+      urls.delete(id); blobs.delete(id);
+      await tx('blobs', 'readwrite', s => s.delete(id));
+      return { deleted: true };
+    },
+  };
+  const downloads = {
+    async save({ filename, data }) {
+      const b = data instanceof Blob ? data : new Blob([data]);
+      const u = URL.createObjectURL(b);
+      const a = document.createElement('a');
+      a.href = u; a.download = filename;
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(u), 120000);
+      return { status: 'saved' };
+    },
+  };
+
+  /* 資料包: one zip holding data.json (every document) + photos/<id>.jpg — the backup and the way to move between devices */
+  async function exportPackage(onProgress) {
+    await ready;
+    const zip = new JSZip();
+    zip.file('data.json', JSON.stringify({ app: 'baijia', version: 1, exportedAt: new Date().toISOString(), docs: Object.fromEntries(docs) }));
+    for (const [id, b] of blobs) zip.file(`photos/${id}.${(b.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg')}`, b);
+    return zip.generateAsync({ type: 'blob', compression: 'STORE' }, m => onProgress?.(m.percent));
+  }
+  async function importPackage(file, onProgress) {
+    const zip = await JSZip.loadAsync(file);
+    const f = zip.file('data.json');
+    if (!f) throw new Error('呢個檔案唔係敗家表資料包');
+    const data = JSON.parse(await f.async('string'));
+    if (data.app !== 'baijia' || !data.docs) throw new Error('呢個檔案唔係敗家表資料包');
+    const photos = zip.file(/^photos\/[^/]+$/);
+    // read every photo before touching the stores, so a broken zip leaves this device's data alone
+    const read = [];
+    for (let i = 0; i < photos.length; i++) {
+      const p = photos[i];
+      const name = p.name.slice(7);
+      const ext = name.split('.').pop().toLowerCase();
+      const type = { png: 'image/png', webp: 'image/webp', gif: 'image/gif' }[ext] || 'image/jpeg';
+      read.push([name.replace(/\.[^.]+$/, ''), new Blob([await p.async('arraybuffer')], { type })]);
+      if (i % 20 === 0) onProgress?.(Math.round(i / photos.length * 90));
+    }
+    await tx('docs', 'readwrite', s => { s.clear(); for (const [k, v] of Object.entries(data.docs)) s.put(v, k); });
+    await tx('blobs', 'readwrite', s => { s.clear(); for (const [k, b] of read) s.put(b, k); });
+    onProgress?.(100);
+    return { docs: Object.keys(data.docs).length, photos: read.length, exportedAt: data.exportedAt };
+  }
+  async function usage() {
+    try { return await navigator.storage.estimate(); } catch { return null; }
+  }
+  async function persist() {
+    try { return await navigator.storage?.persist?.(); } catch { return false; }
+  }
+
+  window.LOCAL = { blobURL, exportPackage, importPackage, usage, persist, ready, photoCount: () => blobs.size };
+  window.claude = { use: async name => ({ db, assets, downloads, user: { can: async () => true } })[name] || null };
+})();
+</script>
+<script>
+(() => {
+const CURS = ['HKD', 'CNY', 'JPY', 'TWD', 'USD', 'KRW', 'EUR', 'GBP', 'CAD', 'MOP'];
+const CUR_NAME = { HKD: 'HK$ 港幣', CNY: '¥ 人民幣', JPY: '円 日圓', TWD: 'NT$ 台幣', USD: 'US$ 美元', KRW: '₩ 韓圜', EUR: '€ 歐元', GBP: '£ 英鎊', CAD: 'CA$ 加幣', MOP: 'MOP$ 澳門幣' };
+const CUR_SYM = { HKD: 'HK$', CNY: '¥', JPY: '円', TWD: 'NT$', USD: 'US$', KRW: '₩', EUR: '€', GBP: '£', CAD: 'CA$', MOP: 'MOP$' };
+const STATUS = { own: '持有中', selling: '出售中', sold: '已售出' };
+const AUTO_FLAGS = ['冇日期', '冇價錢'];
+const CHUNK_MAX = 150;
+const BACKUP_DAYS = 30;
+
+const S = {
+  db: null, assets: null, downloads: null, canWrite: true,
+  items: new Map(), chunkOf: new Map(), chunkSize: new Map(), orders: new Map(),
+  settings: null, loaded: { chunks: false, settings: false, orders: false }, dbMissing: false,
+  view: 'overview', filter: { q: '', cat: '', status: '', year: '', flag: false }, shown: 80,
+  sort: (() => { try { return localStorage.getItem('baijia-sort') || 'date-desc'; } catch { return 'date-desc'; } })(),
+};
+const SORTS = {
+  'date-desc': '日期：新→舊', 'date-asc': '日期：舊→新', 'price-desc': '金額：高→低', 'price-asc': '金額：低→高',
+  'cat': '分類', 'name': '名稱', 'updated': '最近修改',
+};
+
+/* ---------- helpers ---------- */
+const $ = (sel, root = document) => root.querySelector(sel);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const round1 = n => Math.round(n * 10) / 10;
+function money(n, opts = {}) {
+  const v = Number(n) || 0;
+  const s = Math.abs(v) >= 100 || opts.int ? Math.round(v).toLocaleString('en-US') : round1(v).toLocaleString('en-US');
+  return (opts.bare ? '' : 'HK$ ') + s;
+}
+function partsText(parts) {
+  if (!parts || !parts.length) return '';
+  return parts.map(([c, a]) => CUR_SYM[c] + ' ' + (+a).toLocaleString('en-US')).join(' + ');
+}
+const today = () => new Date().toISOString().slice(0, 10);
+const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg;
+  $('#toast-root').replaceChildren(el);
+  setTimeout(() => el.remove(), 2600);
+}
+function rate(cur) {
+  if (cur === 'HKD') return 1;
+  const r = S.settings?.rates?.[cur];
+  return typeof r === 'number' ? r : 0;
+}
+const toHKD = parts => round1((parts || []).reduce((s, [c, a]) => s + (+a || 0) * rate(c), 0));
+function categories() {
+  const list = [...(S.settings?.categories || [])];
+  for (const it of S.items.values()) if (it.cat && !list.includes(it.cat)) list.push(it.cat);
+  return list;
+}
+function catColor(cat) {
+  const i = categories().indexOf(cat);
+  return `var(--c${i < 0 ? 7 : Math.min(i, 7)})`;
+}
+function isFlagged(it) { return (it.flags || []).length > 0; }
+
+/* ---------- write queue: one write at a time per document ---------- */
+const queues = new Map();
+function enqueue(key, fn) {
+  const p = (queues.get(key) || Promise.resolve()).catch(() => {}).then(fn);
+  queues.set(key, p);
+  return p;
+}
+function writeErr(e) {
+  console.error(e);
+  if (e?.code === 'quota_exceeded') toast('儲存空間滿咗，請匯出備份後刪走舊紀錄');
+  else if (e?.code === 'invalid_argument') toast('冇權限修改，請確認你係編輯者');
+  else toast('儲存失敗，請再試一次');
+  throw e;
+}
+
+function pickChunk() {
+  let best = null;
+  for (const [id, n] of S.chunkSize) if (n < CHUNK_MAX && (!best || n < S.chunkSize.get(best))) best = id;
+  return best;
+}
+const ITEM_FIELDS = ['cat', 'series', 'name', 'qty', 'date', 'status', 'price', 'fee', 'sold', 'priceHKD', 'feeHKD', 'soldHKD', 'note', 'links', 'imgs', 'photos', 'photoFiles', 'tags', 'flags', 'orderId'];
+function cleanItem(it) {
+  const out = {};
+  for (const k of ITEM_FIELDS) out[k] = it[k] ?? (['price', 'fee', 'sold', 'links', 'imgs', 'photos', 'photoFiles', 'tags', 'flags'].includes(k) ? [] : null);
+  for (const k of ['raw', 'src', 'fxDate']) if (it[k] !== undefined) out[k] = it[k];
+  out.updated = new Date().toISOString();
+  return out;
+}
+async function saveItem(it) {
+  const id = it.id || newId('n');
+  let chunk = S.chunkOf.get(id);
+  let isNew = false;
+  if (!chunk) {
+    chunk = pickChunk();
+    if (!chunk) { chunk = newId('c'); isNew = true; }
+  }
+  const body = cleanItem(it);
+  await enqueue('chunks/' + chunk, async () => {
+    const ref = S.db.doc('chunks/' + chunk);
+    if (isNew || !S.chunkSize.has(chunk)) await ref.set({ items: { [id]: body } });
+    else await ref.update({ items: { [id]: body } });
+  }).catch(writeErr);
+  return id;
+}
+async function deleteItem(id) {
+  const chunk = S.chunkOf.get(id);
+  if (!chunk) return;
+  await enqueue('chunks/' + chunk, async () => {
+    const items = {};
+    for (const [iid, c] of S.chunkOf) if (c === chunk && iid !== id) { const { id: _, ...rest } = S.items.get(iid); items[iid] = rest; }
+    await S.db.doc('chunks/' + chunk).set({ items });
+  }).catch(writeErr);
+}
+async function patchItems(ids, patchFn) {
+  const byChunk = new Map();
+  for (const id of ids) {
+    const c = S.chunkOf.get(id);
+    if (!byChunk.has(c)) byChunk.set(c, {});
+    byChunk.get(c)[id] = patchFn(S.items.get(id));
+  }
+  await Promise.all([...byChunk].map(([c, items]) =>
+    enqueue('chunks/' + c, () => S.db.doc('chunks/' + c).update({ items })))).catch(writeErr);
+}
+async function saveSettings(patch) {
+  const next = { ...(S.settings || {}), ...patch };
+  S.settings = next;
+  await enqueue('meta/settings', () => S.db.doc('meta/settings').set(next)).catch(writeErr);
+}
+
+/* ---------- derived numbers ---------- */
+function derive(items) {
+  const orderCount = new Map();
+  for (const it of S.items.values()) if (it.orderId) orderCount.set(it.orderId, (orderCount.get(it.orderId) || 0) + 1);
+  const t = { spent: 0, fees: 0, sold: 0, n: 0, flagged: 0, undated: 0, undatedSum: 0, byYear: new Map(), byCat: new Map(), byCur: new Map(), soldByCat: new Map() };
+  for (const it of items) {
+    if (it.feeOnly) { t.fees += it.feeHKD || 0; continue; }
+    t.n++;
+    t.spent += it.priceHKD || 0;
+    t.fees += it.feeHKD || 0;
+    t.sold += it.soldHKD || 0;
+    if (isFlagged(it)) t.flagged++;
+    const y = it.date ? it.date.slice(0, 4) : null;
+    if (!y) { t.undated++; t.undatedSum += it.priceHKD || 0; }
+    else {
+      if (!t.byYear.has(y)) t.byYear.set(y, new Map());
+      const m = t.byYear.get(y);
+      m.set(it.cat, (m.get(it.cat) || 0) + (it.priceHKD || 0));
+    }
+    t.byCat.set(it.cat, (t.byCat.get(it.cat) || 0) + (it.priceHKD || 0));
+    t.soldByCat.set(it.cat, (t.soldByCat.get(it.cat) || 0) + (it.soldHKD || 0));
+    const parts = it.price || [];
+    const tot = parts.reduce((s, [c, a]) => s + (+a || 0) * (rate(c) || 0), 0);
+    for (const [c, a] of parts) {
+      const share = tot > 0 ? ((+a || 0) * (rate(c) || 0)) / tot : 1 / parts.length;
+      t.byCur.set(c, (t.byCur.get(c) || 0) + (it.priceHKD || 0) * share);
+    }
+  }
+  for (const o of S.orders.values()) t.fees += o.feeHKD || 0;
+  t.orderCount = orderCount;
+  return t;
+}
+
+/* ---------- rendering ---------- */
+let renderPending = false;
+function scheduleRender() {
+  if (renderPending) return;
+  renderPending = true;
+  requestAnimationFrame(() => { renderPending = false; render(); });
+}
+function setView(v) {
+  S.view = v;
+  for (const b of document.querySelectorAll('nav.tabs button')) b.toggleAttribute('aria-current', b.dataset.view === v), b.dataset.view === v && b.setAttribute('aria-current', 'page');
+  // 谷櫃 is the list view drawn as a photo grid, so it shares the list's section, filters and sort
+  const section = v === 'cabinet' ? 'list' : v;
+  for (const id of ['overview', 'list', 'settings']) $('#v-' + id).hidden = id !== section;
+  try { history.replaceState(null, '', '#' + v); } catch {}
+  render();
+  window.scrollTo(0, 0);
+}
+function render() {
+  $('#fab').hidden = !S.canWrite || S.dbMissing;
+  if (S.dbMissing) {
+    $('#v-' + S.view).innerHTML = `<div class="card empty"><b>開唔到資料庫</b>呢個瀏覽器唔俾網頁儲存資料（例如私密瀏覽模式）。請用一般模式打開。</div>`;
+    return;
+  }
+  if (!S.loaded.chunks || !S.loaded.settings) return;
+  if (S.view === 'overview') renderOverview();
+  else if (S.view === 'list' || S.view === 'cabinet') renderList();
+  else renderSettings();
+}
+
+function renderOverview() {
+  const items = [...S.items.values()];
+  const root = $('#v-overview');
+  if (!items.length) {
+    root.innerHTML = `<div class="card empty"><b>未有任何紀錄</b>第一次用：揀「敗家表資料包」(.zip) 匯入舊紀錄同相片；或者撳右下角「＋ 記一筆」由零開始。<div class="inline" style="justify-content:center;margin-top:14px"><label class="btn primary" for="pkg-file">匯入資料包</label></div><div id="pkg-status" style="margin-top:10px"></div></div>`;
+    return;
+  }
+  const t = derive(items);
+  const years = items.map(i => i.date).filter(Boolean).sort();
+  $('#since').textContent = years.length ? `自 ${years[0].slice(0, 4)} 年起` : '';
+  const last = S.settings?.lastBackup;
+  const days = last ? Math.floor((Date.now() - new Date(last).getTime()) / 864e5) : null;
+  const backupDue = days === null || days >= BACKUP_DAYS;
+  const recent = items.filter(i => !i.feeOnly).sort((a, b) => (b.updated || '').localeCompare(a.updated || '') || (b.date || '').localeCompare(a.date || '')).slice(0, 5);
+
+  root.innerHTML = `
+    ${backupDue ? `<div class="banner warn"><span class="grow">${days === null ? '仲未備份過。' : `已經 ${days} 日冇備份。`}資料只存喺呢部機，匯出一份資料包放去雲端硬碟會安心啲。</span><button class="btn" data-act="exportpkg">匯出資料包</button></div>` : ''}
+    <div class="hero">
+      <span class="punch" aria-hidden="true"></span>
+      <div class="eyebrow">至今已敗家（物品價，不計運費）</div>
+      <div class="big num"><span class="cur">HK$</span>${money(t.spent, { bare: true, int: true })}</div>
+      <div class="sub">${t.n.toLocaleString()} 件物品${t.flagged ? ` · <button class="linkish" data-act="flagged">${t.flagged.toLocaleString()} 件待確認</button>` : ''}</div>
+      <div class="stats">
+        <div><span class="k">運費＋代購費</span><span class="v num">${money(t.fees, { int: true })}</span></div>
+        <div><span class="k">合計（連運費）</span><span class="v num">${money(t.spent + t.fees, { int: true })}</span></div>
+        <div><span class="k">賣出回收</span><span class="v num gain">${money(t.sold, { int: true })}</span></div>
+        <div><span class="k">淨支出（物品價 − 賣出）</span><span class="v num">${money(t.spent - t.sold, { int: true })}</span></div>
+      </div>
+    </div>
+    <div class="card"><h2>每年支出 <small>撳一年睇嗰年嘅清單</small></h2>${yearChart(t)}</div>
+    <div class="grid2">
+      <div class="card"><h2>邊個最燒錢 <small>物品價 · 綠色係賣返</small></h2>${rankChart(t)}</div>
+      <div class="card"><h2>用咩貨幣買 <small>按港幣計佔比</small></h2>${curChart(t)}</div>
+    </div>
+    <div class="card"><h2>最近記錄</h2><div class="items" style="border:0">${recent.map(rowHTML).join('')}</div>
+      <div class="note"><button class="linkish" data-act="all">睇晒全部 →</button></div></div>`;
+}
+
+function yearChart(t) {
+  const years = [...t.byYear.keys()].sort();
+  if (!years.length) return '<div class="note">未有有日期嘅紀錄。</div>';
+  const top = [...t.byCat].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([c]) => c);
+  // draw at roughly the card's real width so axis labels stay legible on phones
+  const W = Math.round(Math.min(720, Math.max(300, ($('#v-overview').clientWidth || 640) - 34))), H = W < 480 ? 200 : 240, padL = 40, padB = 22, padT = 10, padR = 6;
+  const totals = years.map(y => [...t.byYear.get(y).values()].reduce((a, b) => a + b, 0));
+  const max = Math.max(...totals);
+  const step = niceStep(max / 4);
+  const ymax = Math.ceil(max / step) * step;
+  const bw = (W - padL - padR) / years.length;
+  const sy = v => padT + (H - padT - padB) * (1 - v / ymax);
+  let g = '';
+  for (let v = 0; v <= ymax + 1; v += step) {
+    g += `<line class="grid" x1="${padL}" x2="${W - padR}" y1="${sy(v)}" y2="${sy(v)}"/><text x="${padL - 6}" y="${sy(v) + 4}" text-anchor="end">${v >= 1000 ? v / 1000 + 'k' : v}</text>`;
+  }
+  years.forEach((y, i) => {
+    const m = t.byYear.get(y);
+    let acc = 0;
+    const x = padL + i * bw + bw * 0.16, w = bw * 0.68;
+    const segs = top.map(c => [c, m.get(c) || 0]);
+    const rest = [...m].filter(([c]) => !top.includes(c)).reduce((s, [, v]) => s + v, 0);
+    segs.push(['__rest', rest]);
+    for (const [c, v] of segs) {
+      if (v <= 0) continue;
+      const y1 = sy(acc + v), y0 = sy(acc);
+      g += `<rect x="${x}" y="${y1}" width="${w}" height="${Math.max(0, y0 - y1)}" fill="${c === '__rest' ? 'var(--c7)' : catColor(c)}"/>`;
+      acc += v;
+    }
+    const lab = bw < 34 ? "'" + y.slice(2) : y;
+    g += `<text x="${x + w / 2}" y="${H - 6}" text-anchor="middle">${lab}</text>`;
+    g += `<rect class="hit" data-year="${y}" x="${padL + i * bw}" y="${padT}" width="${bw}" height="${H - padT - padB}"><title>${y} 年：${money(totals[i], { int: true })}</title></rect>`;
+  });
+  const legend = top.map(c => `<span><i style="background:${catColor(c)}"></i>${esc(c)}</span>`).join('') + `<span><i style="background:var(--c7)"></i>其他分類</span>`;
+  const und = t.undated ? `<div class="note">另有 ${t.undated.toLocaleString()} 件冇日期（${money(t.undatedSum, { int: true })}），冇計入呢個圖。</div>` : '';
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="每年支出">${g}</svg><div class="legend">${legend}</div>${und}`;
+}
+function niceStep(x) {
+  const p = Math.pow(10, Math.floor(Math.log10(x || 1)));
+  for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= x) return m * p;
+  return 10 * p;
+}
+function rankChart(t) {
+  const rows = [...t.byCat].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+  const max = rows[0]?.[1] || 1;
+  return `<div class="rank">${rows.map(([c, v]) => {
+    const sold = Math.min(t.soldByCat.get(c) || 0, v);
+    return `<button type="button" data-cat="${esc(c)}"><span class="name">${esc(c)}</span>
+      <span class="bar"><span style="width:${(v - sold) / max * 100}%;background:${catColor(c)}"></span><span style="width:${sold / max * 100}%;background:var(--gain);opacity:.55"></span></span>
+      <span class="val num">${money(v, { int: true })}</span></button>`;
+  }).join('')}</div>`;
+}
+function curChart(t) {
+  const rows = [...t.byCur].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+  const tot = rows.reduce((s, [, v]) => s + v, 0) || 1;
+  const cols = ['var(--c0)', 'var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)', 'var(--c6)', 'var(--c7)'];
+  return `<div class="curbar">${rows.map(([c, v], i) => `<span title="${CUR_NAME[c] || c}" style="width:${v / tot * 100}%;background:${cols[Math.min(i, 7)]}"></span>`).join('')}</div>
+    <div class="curlist">${rows.map(([c, v], i) => `<div><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;background:${cols[Math.min(i, 7)]}"></i>${CUR_NAME[c] || c}</span><b>${Math.round(v / tot * 100)}%</b></div>`).join('')}</div>
+    <div class="note">新紀錄用設定入面嘅匯率換算；舊紀錄用購買當日匯率，已經鎖定。</div>`;
+}
+
+function rowHTML(it) {
+  const flag = isFlagged(it) ? `<span class="chip warn">待確認</span>` : '';
+  const st = it.status !== 'own' ? `<span class="chip ${it.status}">${STATUS[it.status]}${it.status === 'sold' && it.soldHKD ? ' ' + money(it.soldHKD, { int: true }) : ''}</span>` : '';
+  const meta = [esc(it.cat), it.series ? esc(it.series) : '', it.date || '冇日期'].filter(Boolean).join(' · ');
+  return `<button type="button" class="row" data-id="${esc(it.id)}">
+    <span class="dot" style="background:${catColor(it.cat)}"></span>
+    <span style="min-width:0"><div class="t">${esc(it.name || '（冇名）')}</div><div class="m">${meta}${st}${flag}</div></span>
+    <span class="p"><b>${it.feeOnly ? money(it.feeHKD) : money(it.priceHKD)}</b>${it.price?.length && it.price.some(([c]) => c !== 'HKD') ? `<small style="color:var(--ink-3);font-size:11px">${esc(partsText(it.price))}</small>` : ''}</span>
+  </button>`;
+}
+
+// "卡X4+貼紙X2" -> 6, "本+紙袋" -> 2; a saved qty always wins
+function parseQty(name) {
+  const parts = String(name || '').split(/[+＋]/).filter(p => p.trim());
+  let n = 0;
+  for (const p of parts) { const m = p.match(/[xX×]\s*(\d{1,3})(?!\d)/); n += m ? +m[1] || 1 : 1; }
+  return Math.max(1, n);
+}
+const qtyOf = it => it.qty || parseQty(it.name);
+function cardHTML(it) {
+  const photo = (it.photos || [])[0];
+  const q = qtyOf(it);
+  const st = it.status !== 'own' ? `<span class="chip ${it.status} stt">${STATUS[it.status]}</span>` : '';
+  const pic = photo
+    ? `<img src="${LOCAL.blobURL(photo)}" alt="" loading="lazy" onerror="this.remove()">`
+    : `<span class="ph-text"><b>${esc(it.series || it.cat)}</b><small>未有相片</small></span>`;
+  return `<button type="button" class="gcard" data-id="${esc(it.id)}" style="--cc:${catColor(it.cat)}">
+    <span class="pic">${pic}${st}${q > 1 ? `<span class="qty num">×${q}</span>` : ''}${(it.photos || []).length > 1 ? `<span class="pcount num">${it.photos.length} 張</span>` : ''}${isFlagged(it) ? '<span class="flagdot" title="待確認"></span>' : ''}</span>
+    <span class="nm">${esc(it.name || '（冇名）')}</span>
+    <span class="pr num">${money(it.feeOnly ? it.feeHKD : it.priceHKD)}</span>
+  </button>`;
+}
+
+function filtered() {
+  const f = S.filter;
+  const q = f.q.trim().toLowerCase();
+  return [...S.items.values()].filter(it => {
+    if (f.cat && it.cat !== f.cat) return false;
+    if (f.status && it.status !== f.status) return false;
+    if (f.year === '?' ? it.date : f.year && !(it.date || '').startsWith(f.year)) return false;
+    if (f.flag && !isFlagged(it)) return false;
+    if (q) {
+      const hay = [it.name, it.series, it.note, it.cat, ...(it.tags || [])].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  }).sort(sorter());
+}
+function sorter() {
+  const newest = (a, b) => (b.date || '0').localeCompare(a.date || '0') || (b.updated || '').localeCompare(a.updated || '');
+  const amount = it => it.feeOnly ? it.feeHKD || 0 : it.priceHKD || 0;
+  switch (S.sort) {
+    // undated items stay at the end in both date orders
+    case 'date-asc': return (a, b) => (a.date || '9999').localeCompare(b.date || '9999') || newest(a, b);
+    case 'price-desc': return (a, b) => amount(b) - amount(a) || newest(a, b);
+    case 'price-asc': return (a, b) => amount(a) - amount(b) || newest(a, b);
+    case 'cat': {
+      const order = categories();
+      return (a, b) => order.indexOf(a.cat) - order.indexOf(b.cat) || (a.series || '').localeCompare(b.series || '', 'zh-Hant') || newest(a, b);
+    }
+    case 'name': return (a, b) => (a.name || '').localeCompare(b.name || '', 'zh-Hant');
+    case 'updated': return (a, b) => (b.updated || '').localeCompare(a.updated || '') || newest(a, b);
+    default: return newest;
+  }
+}
+function renderList() {
+  const root = $('#v-list');
+  if (!root.firstElementChild || !$('#f-q', root)) {
+    const years = [...new Set([...S.items.values()].map(i => i.date?.slice(0, 4)).filter(Boolean))].sort().reverse();
+    root.innerHTML = `
+      <div class="filters">
+        <input class="q" id="f-q" type="search" placeholder="搜尋名稱、系列、備註、標籤" autocomplete="off">
+        <select id="f-cat" aria-label="分類"></select>
+        <select id="f-status" aria-label="狀態"><option value="">全部狀態</option>${Object.entries(STATUS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
+        <select id="f-year" aria-label="年份"><option value="">全部年份</option>${years.map(y => `<option>${y}</option>`).join('')}<option value="?">冇日期</option></select>
+        <select id="f-sort" aria-label="排序">${Object.entries(SORTS).map(([k, v]) => `<option value="${k}">排序：${v}</option>`).join('')}</select>
+        <label class="toggle"><input type="checkbox" id="f-flag"> 只睇待確認</label>
+      </div>
+      <div class="summary-line" id="l-sum"></div>
+      <div class="items" id="l-items"></div>
+      <div id="l-more" style="text-align:center"></div>`;
+  }
+  const catSel = $('#f-cat', root);
+  catSel.innerHTML = `<option value="">全部分類</option>` + categories().map(c => `<option>${esc(c)}</option>`).join('');
+  catSel.value = S.filter.cat;
+  if (document.activeElement !== $('#f-q', root)) $('#f-q', root).value = S.filter.q;
+  $('#f-status', root).value = S.filter.status;
+  $('#f-year', root).value = S.filter.year;
+  $('#f-sort', root).value = S.sort;
+  $('#f-flag', root).checked = S.filter.flag;
+  const list = filtered();
+  const sum = list.reduce((s, i) => s + (i.priceHKD || 0), 0);
+  const grid = S.view === 'cabinet';
+  const pieces = grid ? list.reduce((s, i) => s + qtyOf(i), 0) : 0;
+  $('#l-sum', root).innerHTML = `<span>${list.length.toLocaleString()} ${grid ? `款 · 共 ${pieces.toLocaleString()} 件` : '件'}</span><span class="num" style="font-size:16px">${money(sum, { int: true })}</span>`;
+  const box = $('#l-items', root);
+  box.className = grid ? 'cabinet' : 'items';
+  box.innerHTML = list.length ? list.slice(0, S.shown).map(grid ? cardHTML : rowHTML).join('') : `<div class="empty"><b>搵唔到符合嘅紀錄</b>試下清走搜尋字或者篩選。</div>`;
+  $('#l-more', root).innerHTML = list.length > S.shown ? `<button class="btn" data-act="more">再顯示 ${Math.min(80, list.length - S.shown)} 件（仲有 ${list.length - S.shown} 件）</button>` : '';
+}
+
+function renderSettings() {
+  const root = $('#v-settings');
+  const counts = new Map();
+  for (const it of S.items.values()) counts.set(it.cat, (counts.get(it.cat) || 0) + 1);
+  const cats = categories();
+  const rates = S.settings?.rates || {};
+  const orders = [...S.orders.values()].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const t = derive([...S.items.values()]);
+  const ro = !S.canWrite;
+  root.innerHTML = `
+    <div class="card"><h2>資料包 <small>備份、搬去另一部機都用佢</small></h2>
+      <div class="inline"><button class="btn primary" data-act="exportpkg">匯出資料包（連相片）</button><label class="btn" for="pkg-file">匯入資料包</label></div>
+      <div id="pkg-status" style="margin-top:8px">${pkgStatusHTML()}</div>
+    </div>
+    <div class="card"><h2>分類 <small>${cats.length} 個 · 改名或合併會同時更新所有物品</small></h2>
+      <div class="set-list">${cats.map((c, i) => `
+        <div class="set-row" data-cat="${esc(c)}">
+          <span class="dot" style="width:10px;height:10px;border-radius:3px;background:${catColor(c)}"></span>
+          <span style="min-width:0">${esc(c)} <small style="color:var(--ink-3)">${counts.get(c) || 0} 件</small></span>
+          <span class="acts">${ro ? '' : `
+            <button class="btn ghost" data-cact="up" ${i === 0 ? 'disabled' : ''} aria-label="上移">↑</button>
+            <button class="btn ghost" data-cact="down" ${i === cats.length - 1 ? 'disabled' : ''} aria-label="下移">↓</button>
+            <button class="btn" data-cact="rename">改名</button>
+            <button class="btn" data-cact="merge">合併</button>
+            ${counts.get(c) ? '' : '<button class="btn danger" data-cact="del">刪除</button>'}`}
+          </span>
+        </div>`).join('')}</div>
+      ${ro ? '' : `<div class="inline" style="margin-top:12px"><input class="field" id="new-cat" placeholder="新分類名稱"><button class="btn" data-act="addcat">加分類</button></div>`}
+      <div id="cat-edit"></div>
+    </div>
+    <div class="card"><h2>匯率 <small>1 單位外幣 = 幾多港幣 · 只用嚟計新紀錄${S.settings?.ratesDate ? ' · 更新於 ' + esc(S.settings.ratesDate) : ''}</small></h2>
+      <div class="rates">${CURS.filter(c => c !== 'HKD').map(c => `<label><span>${CUR_SYM[c]}</span><input class="field num" type="number" step="any" min="0" id="rate-${c}" value="${rates[c] ?? ''}" ${ro ? 'disabled' : ''}></label>`).join('')}</div>
+      ${ro ? '' : `<div class="inline" style="margin-top:12px"><button class="btn" data-act="saverates">儲存匯率</button><span class="note" style="margin:0">想更新到最新匯率，可以叫 Claude 幫手，或者喺度自己改。</span></div>`}
+    </div>
+    <div class="card"><h2>訂單 <small>${orders.length} 張 · 運費會平均分攤到單入面每件物品</small></h2>
+      ${orders.length ? `<div class="set-list">${orders.map(o => `
+        <div class="set-row" data-order="${esc(o.id)}"><span></span>
+          <span style="min-width:0">${esc(o.name || '未命名訂單')} <small style="color:var(--ink-3)">${esc(o.date || '')} · ${t.orderCount.get(o.id) || 0} 件 · 運費 ${money(o.feeHKD)}</small></span>
+          <span class="acts">${ro ? '' : `<button class="btn" data-oact="edit">修改</button>`}</span>
+        </div>`).join('')}</div>` : '<div class="note" style="margin:0">未有訂單。記一筆嘅時候揀「開新訂單」，就可以將同一張單嘅物品歸埋一齊。</div>'}
+      <div id="order-edit"></div>
+    </div>
+    ${S.assets && !ro ? `<div class="card"><h2>匯入舊截圖 <small>${[...S.items.values()].filter(i => (i.imgs || []).length > (i.photoFiles || []).length).length.toLocaleString()} 件物品仲有截圖未上載</small></h2>
+      <div class="inline"><label class="btn primary" for="imp-dir" ${IMP.running ? 'hidden' : ''}>揀資料夾</label><input type="file" id="imp-dir" webkitdirectory multiple hidden>
+        <label class="btn" for="imp-files" ${IMP.running ? 'hidden' : ''}>或者揀相片檔</label><input type="file" id="imp-files" multiple accept="image/*,.heic,.jfif" hidden></div>
+      <div id="imp-status" style="margin-top:8px">${importStatusHTML()}</div>
+    </div>` : ''}
+    <div class="card"><h2>備份同匯出 <small>${S.settings?.lastBackup ? '上次備份：' + esc(S.settings.lastBackup.slice(0, 10)) : '仲未備份過'}</small></h2>
+      <div class="inline"><button class="btn primary" data-act="backup">匯出 Excel</button><button class="btn" data-act="backupjson">匯出 JSON</button></div>
+      <div class="note">Excel 每件物品一行，方便用其他軟件打開；JSON 係完整資料，可以用嚟還原。截圖唔會包括喺入面。</div>
+    </div>
+    <div class="card"><h2>資料概況</h2>
+      <div class="note" style="margin:0">${S.items.size.toLocaleString()} 條紀錄 · ${t.flagged.toLocaleString()} 條待確認 · ${S.chunkSize.size} 個資料分頁 · 舊紀錄嘅截圖暫時只保留檔名。</div>
+    </div>`;
+}
+
+/* ---------- editor sheet ---------- */
+function partsEditor(id, parts) {
+  const rows = (parts && parts.length ? parts : [[S.settings?.lastCur || 'HKD', '']]);
+  return `<div class="parts" id="${id}">${rows.map(p => partRow(p)).join('')}</div>
+    <div class="inline" style="margin-top:4px"><button type="button" class="linkish" data-addpart="${id}">＋ 再加一種貨幣</button></div>`;
+}
+function partRow([c, a]) {
+  return `<div class="part"><input class="field num" type="number" step="any" min="0" inputmode="decimal" placeholder="金額" value="${a === '' || a == null ? '' : a}">
+    <select class="field">${CURS.map(k => `<option value="${k}" ${k === c ? 'selected' : ''}>${CUR_NAME[k]}</option>`).join('')}</select>
+    <button type="button" class="x" aria-label="移除">×</button></div>`;
+}
+function readParts(el) {
+  return [...el.querySelectorAll('.part')].map(r => [r.querySelector('select').value, parseFloat(r.querySelector('input').value)]).filter(([, a]) => !isNaN(a));
+}
+
+let editing = null;
+function openEditor(id) {
+  if (!S.canWrite && !id) return;
+  const it = id ? { ...S.items.get(id) } : { cat: S.filter.cat || categories()[0] || '其他', status: 'own', date: today(), price: [], fee: [], sold: [], photos: [], imgs: [], links: [], tags: [], flags: [] };
+  // photos: the order shown and saved (first = cover); newPhotos: uploads to clean up if the edit is cancelled
+  editing = { id, it, photos: [...(it.photos || [])], newPhotos: [], removedPhotos: [] };
+  const cats = categories();
+  const series = [...new Set([...S.items.values()].map(i => i.series).filter(Boolean))].sort();
+  const orders = [...S.orders.values()].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 40);
+  const ro = !S.canWrite;
+  const root = $('#sheet-root');
+  root.innerHTML = `
+  <div class="overlay" id="ov">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ed-title">
+      <div class="sheet-head"><h3 id="ed-title">${id ? (ro ? '物品' : '修改物品') : '記一筆'}</h3>
+        <button type="button" class="btn ghost" data-act="close">取消</button>
+        ${ro ? '' : `<button type="button" class="btn primary" data-act="save">儲存</button>`}</div>
+      <form class="form" id="ed" autocomplete="off">
+        ${isFlagged(it) ? `<div class="flagbox"><span style="flex:1;min-width:0">待確認：${it.flags.map(esc).join('、')}</span>${ro ? '' : '<button type="button" class="btn" data-act="clearflags">已確認，清除標記</button>'}</div>` : ''}
+        <div><label class="l" for="ed-name">名稱</label><input class="field" id="ed-name" required value="${esc(it.name || '')}" placeholder="例如：星光索拉卡 立牌"></div>
+        <div class="two">
+          <div><label class="l" for="ed-cat">分類</label><select class="field" id="ed-cat">${cats.map(c => `<option ${c === it.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
+          <div><label class="l" for="ed-series">系列／作品（可留空）</label><input class="field" id="ed-series" list="dl-series" value="${esc(it.series || '')}"><datalist id="dl-series">${series.map(s => `<option value="${esc(s)}">`).join('')}</datalist></div>
+        </div>
+        <div class="two">
+          <div><label class="l" for="ed-date">日期</label><input class="field" id="ed-date" type="date" value="${esc(it.date || '')}"></div>
+          <div><label class="l">狀態</label><div class="seg" id="ed-status">${Object.entries(STATUS).map(([k, v]) => `<button type="button" data-st="${k}" aria-pressed="${it.status === k}">${v}</button>`).join('')}</div></div>
+        </div>
+        <div class="two">
+          <div><label class="l" for="ed-qty">數量（谷櫃 ×N）</label><input class="field num" id="ed-qty" type="number" min="1" step="1" inputmode="numeric" value="${id ? qtyOf(it) : 1}"></div>
+          <div></div>
+        </div>
+        <div><label class="l">價錢</label>${partsEditor('ed-price', it.price)}
+          <div class="hkd">折合港幣 <input class="field num" id="ed-price-hkd" type="number" step="any" value="${it.priceHKD ?? ''}"> <span id="ed-price-note"></span></div></div>
+        <div><label class="l">運費＋代購費（呢件物品自己嘅）</label>${partsEditor('ed-fee', it.fee)}
+          <div class="hkd">折合港幣 <input class="field num" id="ed-fee-hkd" type="number" step="any" value="${it.feeHKD ?? ''}"></div></div>
+        <div><label class="l" for="ed-order">訂單（同一張單共用運費，可留空）</label>
+          <select class="field" id="ed-order"><option value="">冇訂單</option>${orders.map(o => `<option value="${esc(o.id)}" ${o.id === it.orderId ? 'selected' : ''}>${esc(o.name || '未命名')} · ${esc(o.date || '')} · 運費 ${money(o.feeHKD)}</option>`).join('')}<option value="__new">＋ 開新訂單</option></select>
+          <div id="ed-neworder" hidden style="margin-top:8px;display:grid;gap:8px">
+            <input class="field" id="ed-oname" placeholder="訂單名稱，例如：2026-11 淘寶集運">
+            <div><label class="l">成張單嘅運費＋代購費</label>${partsEditor('ed-ofee', [])}</div>
+          </div></div>
+        <div id="ed-soldbox" ${it.status === 'own' && !(it.sold || []).length ? 'hidden' : ''}><label class="l">賣出價</label>${partsEditor('ed-sold', it.sold)}
+          <div class="hkd">折合港幣 <input class="field num" id="ed-sold-hkd" type="number" step="any" value="${it.soldHKD ?? ''}"></div></div>
+        <div><label class="l">相片</label><div class="photos" id="ed-photos"></div>
+          ${(it.imgs || []).length ? `<div class="legacy" style="margin-top:6px">舊截圖檔名：${it.imgs.map(esc).join('、')}</div>` : ''}</div>
+        <div><label class="l" for="ed-tags">標籤（用逗號分隔）</label><input class="field" id="ed-tags" value="${esc((it.tags || []).join(', '))}" placeholder="例如：同人本, 2026-11 日本旅行"></div>
+        <div><label class="l" for="ed-note">備註</label><textarea class="field" id="ed-note" rows="2">${esc(it.note || '')}</textarea></div>
+        <div><label class="l" for="ed-links">連結（每行一條）</label><textarea class="field" id="ed-links" rows="2">${esc((it.links || []).join('\n'))}</textarea>
+          ${(it.links || []).length ? `<div class="legacy">${it.links.map(l => /^https?:/.test(l) ? `<a href="${esc(l)}" target="_blank" rel="noopener">${esc(l.length > 60 ? l.slice(0, 60) + '…' : l)}</a>` : esc(l)).join('<br>')}</div>` : ''}</div>
+        ${it.raw || it.src ? `<details class="raw"><summary>原本 Excel 嘅資料</summary><pre>${esc(JSON.stringify({ 來源: it.src, ...(it.raw || {}), 匯率日期: it.fxDate }, null, 1))}</pre></details>` : ''}
+      </form>
+      ${id && !ro ? `<div class="sheet-foot"><span class="grow"></span><span id="ed-del"><button type="button" class="btn danger" data-act="askdel">刪除呢件</button></span></div>` : ''}
+    </div>
+  </div>`;
+  renderPhotos();
+  if (ro) for (const el of root.querySelectorAll('input,select,textarea,.seg button')) el.disabled = true;
+  if (!id) setTimeout(() => $('#ed-name').focus(), 50);
+}
+function renderPhotos() {
+  const box = $('#ed-photos');
+  if (!box) return;
+  box.innerHTML = editing.photos.map((p, i) => `<div class="ph"><img src="${LOCAL.blobURL(p)}" alt="" loading="lazy" onerror="this.style.opacity=.2">${i === 0 && editing.photos.length > 1 ? '<span class="cover">封面</span>' : ''}${S.canWrite ? `<button type="button" data-rmphoto="${esc(p)}" aria-label="移除相片">×</button>${i > 0 ? `<button type="button" class="mkcover" data-coverphoto="${esc(p)}">設為封面</button>` : ''}` : ''}</div>`).join('') +
+    (S.assets && S.canWrite ? `<label class="add" for="ed-file">＋ 影相<br>或揀圖</label><input type="file" id="ed-file" accept="image/*" multiple hidden>` : (S.canWrite ? '<span class="legacy">呢個身份唔可以上載相片（要係編輯者）。</span>' : ''));
+}
+async function uploadPhoto(file) {
+  try {
+    const blob = await shrink(file);
+    const r = await S.assets.upload(blob, { type: 'image/jpeg' });
+    if (!editing) { S.assets.delete(r.id).catch(() => {}); return; }
+    editing.newPhotos.push(r.id);
+    editing.photos.push(r.id);
+    renderPhotos();
+  } catch (e) {
+    console.error(e);
+    toast(e?.code === 'too_large' ? '張相太大' : e?.code === 'quota_or_state' ? '相片儲存空間滿咗' : '上載唔到相片');
+  }
+}
+async function shrink(file, max = 1600, quality = 0.84) {
+  const bmp = await createImageBitmap(file);
+  const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); // transparent PNG screenshots would turn black as JPEG
+  g.drawImage(bmp, 0, 0, c.width, c.height);
+  bmp.close?.();
+  return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('encode')), 'image/jpeg', quality));
+}
+
+// imported screenshots can be shared by several items; only delete an asset nothing else points at
+function photoInUse(p, exceptId) {
+  for (const it of S.items.values()) if (it.id !== exceptId && (it.photos || []).includes(p)) return true;
+  return false;
+}
+
+/* ---------- bulk import of the old Excel screenshots ---------- */
+const IMP = { files: null, plan: [], missing: 0, running: false, done: 0, total: 0, items: 0, failed: [], finished: false };
+function planImport(fileList) {
+  const byName = new Map(), byStem = new Map();
+  const stem = n => n.toLowerCase().replace(/\.[^.]+$/, '');
+  const isHeic = n => /\.heic$/i.test(n);
+  for (const f of fileList) {
+    const k = f.name.toLowerCase();
+    if (!byName.has(k)) byName.set(k, f);
+    // a browser-readable copy (e.g. IMG_0229.jpg converted from IMG_0229.HEIC) wins over the original
+    if (!isHeic(f.name) && !byStem.has(stem(f.name))) byStem.set(stem(f.name), f);
+  }
+  IMP.files = byName; IMP.cache = new Map(); IMP.plan = []; IMP.missing = 0; IMP.done = 0; IMP.failed = []; IMP.finished = false;
+  for (const it of S.items.values()) {
+    const have = new Set((it.photoFiles || []).map(n => n.toLowerCase()));
+    const todo = [];
+    for (const n of it.imgs || []) {
+      if (have.has(n.toLowerCase())) continue;
+      let f = byName.get(n.toLowerCase());
+      if (!f || isHeic(f.name)) f = byStem.get(stem(n)) || f;
+      if (f) todo.push({ ref: n, file: f }); else IMP.missing++;
+    }
+    if (todo.length) IMP.plan.push({ id: it.id, files: todo });
+  }
+  IMP.total = IMP.plan.reduce((s, p) => s + p.files.length, 0);
+  IMP.items = IMP.plan.length;
+}
+async function uploadForImport(file) {
+  let blob;
+  try { blob = await shrink(file, 1280, 0.8); }
+  catch { if (/^image\/(jpeg|png|webp|gif)$/.test(file.type) && file.size < 20e6) blob = file; else throw { code: 'decode' }; }
+  for (let attempt = 0; ; attempt++) {
+    try { return (await S.assets.upload(blob, { type: blob === file ? file.type : 'image/jpeg' })).id; }
+    catch (e) {
+      if ((e?.code === 'rate_limited' || e?.code === 'store_unavailable') && attempt < 4) { await new Promise(r => setTimeout(r, 2000 * (attempt + 1))); continue; }
+      throw e;
+    }
+  }
+}
+async function runImport() {
+  if (IMP.running || !IMP.plan.length) return;
+  IMP.running = true;
+  let lock = null;
+  try { lock = await navigator.wakeLock?.request('screen'); } catch {}
+  const queue = [...IMP.plan];
+  let stop = false;
+  const worker = async () => {
+    while (queue.length && !stop) {
+      const p = queue.shift();
+      const ids = [], names = [];
+      for (const { ref, file } of p.files) {
+        // photoFiles keeps the Excel's own filename, so a rerun recognises it even when a converted copy was used
+        // several items can point at the same screenshot: upload it once and share the asset
+        if (!IMP.cache.has(file)) IMP.cache.set(file, uploadForImport(file));
+        try { ids.push(await IMP.cache.get(file)); names.push(ref); }
+        catch (e) {
+          IMP.failed.push(file.name + (e?.code === 'decode' ? '（格式唔支援）' : ''));
+          if (e?.code === 'quota_or_state') stop = true;
+        }
+        IMP.done++;
+        updateImportStatus();
+      }
+      if (ids.length) {
+        await patchItems([p.id], it => ({ photos: [...(it.photos || []), ...ids], photoFiles: [...(it.photoFiles || []), ...names] })).catch(() => {
+          IMP.failed.push(`${S.items.get(p.id)?.name || p.id}：儲存失敗`);
+        });
+      }
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  try { await lock?.release(); } catch {}
+  IMP.running = false; IMP.finished = true; IMP.plan = [];
+  if (stop) IMP.failed.push('相片儲存空間滿咗，未上載嘅已經停咗');
+  updateImportStatus();
+  toast('舊截圖匯入完成');
+}
+function importStatusHTML() {
+  if (!IMP.files) return `<div class="note">揀你電腦入面放舊截圖嘅資料夾（例如成個 PHOTO 資料夾，連埋入面嘅 HEIC轉JPG），app 會按檔名配對返 Excel 入面記低嘅截圖，縮細之後上載。已經上載過嘅會自動跳過，所以中途停咗可以再揀一次資料夾繼續。</div>`;
+  if (IMP.running || IMP.finished) {
+    const pct = IMP.total ? Math.round(IMP.done / IMP.total * 100) : 100;
+    return `<div class="imp-bar"><span style="width:${pct}%"></span></div>
+      <div class="note">${IMP.running ? `上載緊… ${IMP.done.toLocaleString()} / ${IMP.total.toLocaleString()} 張（${pct}%）。上載期間唔好閂呢個頁面。` : `完成：上載咗 ${(IMP.done - IMP.failed.length).toLocaleString()} 張。`}</div>
+      ${IMP.failed.length ? `<details class="raw"><summary>${IMP.failed.length} 張上載唔到</summary><pre>${esc(IMP.failed.join('\n'))}</pre></details>` : ''}`;
+  }
+  return `<div class="note">配對到 ${IMP.items.toLocaleString()} 件物品、${IMP.total.toLocaleString()} 張相要上載${IMP.missing ? `；另外 ${IMP.missing} 張喺資料夾搵唔到` : ''}。</div>
+    ${IMP.total ? `<div class="inline" style="margin-top:8px"><button class="btn primary" data-act="runimport">開始上載</button></div>` : ''}`;
+}
+function updateImportStatus() {
+  const el = $('#imp-status');
+  if (el) el.innerHTML = importStatusHTML();
+}
+/* ---------- 谷櫃 detail: every photo of one item, then its details ---------- */
+let detail = null;
+function openDetail(id) {
+  const it = S.items.get(id);
+  if (!it) return;
+  detail = { id, i: 0, photos: it.photos || [] };
+  const info = [
+    ['分類', esc(it.cat) + (it.series ? ' · ' + esc(it.series) : '')],
+    ['日期', it.date || '冇日期'],
+    ['數量', '×' + qtyOf(it)],
+    ['價錢', money(it.priceHKD) + (it.price?.some(([c]) => c !== 'HKD') ? ` <small>（${esc(partsText(it.price))}）</small>` : '')],
+    it.feeHKD ? ['運費＋代購', money(it.feeHKD)] : null,
+    it.status !== 'own' ? ['狀態', STATUS[it.status] + (it.soldHKD ? ' · 賣出 ' + money(it.soldHKD) : '')] : null,
+    it.tags?.length ? ['標籤', it.tags.map(esc).join('、')] : null,
+    it.note ? ['備註', esc(it.note)] : null,
+  ].filter(Boolean);
+  const n = detail.photos.length;
+  $('#sheet-root').innerHTML = `
+  <div class="overlay" id="dov">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dv-title">
+      <div class="sheet-head"><h3 id="dv-title">${esc(it.name || '（冇名）')}</h3>
+        <button type="button" class="btn ghost" data-act="dclose">關閉</button>
+        ${S.canWrite ? '<button type="button" class="btn primary" data-act="dedit">修改</button>' : ''}</div>
+      <div class="gallery" style="--cc:${catColor(it.cat)}">
+        ${n ? `<img id="dv-img" alt="">` : `<div class="gallery-empty"><b>${esc(it.series || it.cat)}</b><small>未有相片${S.canWrite ? '，撳「修改」加相' : ''}</small></div>`}
+        ${n > 1 ? `<button type="button" class="gnav prev" data-dvstep="-1" aria-label="上一張">‹</button><button type="button" class="gnav next" data-dvstep="1" aria-label="下一張">›</button><span class="gcount num" id="dv-count"></span>` : ''}
+      </div>
+      ${n > 1 ? `<div class="thumbs">${detail.photos.map((p, i) => `<button type="button" data-dv="${i}" aria-label="第 ${i + 1} 張"><img src="${LOCAL.blobURL(p)}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
+      <dl class="dinfo">${info.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+      ${it.links?.length ? `<div class="legacy" style="padding:0 18px">${it.links.filter(l => /^https?:/.test(l)).map(l => `<a href="${esc(l)}" target="_blank" rel="noopener">${esc(l.length > 60 ? l.slice(0, 60) + '…' : l)}</a>`).join('<br>')}</div>` : ''}
+    </div>
+  </div>`;
+  if (n) showDetailPhoto(0);
+  const g = $('.gallery');
+  let x0 = null;
+  g.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  g.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 40) showDetailPhoto(detail.i + (dx < 0 ? 1 : -1));
+    x0 = null;
+  });
+}
+function showDetailPhoto(i) {
+  if (!detail || !detail.photos.length) return;
+  const n = detail.photos.length;
+  detail.i = (i + n) % n;
+  $('#dv-img').src = LOCAL.blobURL(detail.photos[detail.i]);
+  const c = $('#dv-count');
+  if (c) c.textContent = `${detail.i + 1} / ${n}`;
+  document.querySelectorAll('.thumbs button').forEach((b, k) => b.toggleAttribute('data-on', k === detail.i));
+}
+function closeDetail() {
+  detail = null;
+  $('#sheet-root').innerHTML = '';
+}
+
+function closeEditor(discard) {
+  if (discard && editing?.newPhotos.length && S.assets) for (const p of editing.newPhotos) S.assets.delete(p).catch(() => {});
+  editing = null;
+  $('#sheet-root').innerHTML = '';
+}
+async function submitEditor() {
+  const name = $('#ed-name').value.trim();
+  if (!name) { $('#ed-name').focus(); toast('請填名稱'); return; }
+  const it = editing.it;
+  const price = readParts($('#ed-price')), fee = readParts($('#ed-fee')), sold = readParts($('#ed-sold'));
+  const num = sel => { const v = parseFloat($(sel).value); return isNaN(v) ? 0 : round1(v); };
+  const status = $('#ed-status [aria-pressed="true"]')?.dataset.st || 'own';
+  let orderId = $('#ed-order').value || null;
+  const btn = $('[data-act="save"]');
+  btn.disabled = true;
+  try {
+    if (orderId === '__new') {
+      const ofee = readParts($('#ed-ofee'));
+      orderId = newId('o');
+      const o = { name: $('#ed-oname').value.trim() || `${$('#ed-date').value || today()} 訂單`, date: $('#ed-date').value || today(), fee: ofee, feeHKD: toHKD(ofee), created: new Date().toISOString() };
+      await enqueue('orders/' + orderId, () => S.db.doc('orders/' + orderId).set(o)).catch(writeErr);
+    }
+    const date = $('#ed-date').value || null;
+    const flags = (it.flags || []).filter(f => !AUTO_FLAGS.includes(f));
+    if (!date) flags.push('冇日期');
+    if (!price.length) flags.push('冇價錢');
+    const next = {
+      ...it, name, qty: Math.max(1, parseInt($('#ed-qty').value, 10) || 1), cat: $('#ed-cat').value, series: $('#ed-series').value.trim() || null, date, status,
+      price, fee, sold: status === 'own' && !sold.length ? [] : sold,
+      priceHKD: num('#ed-price-hkd'), feeHKD: num('#ed-fee-hkd'), soldHKD: status === 'own' && !sold.length ? 0 : num('#ed-sold-hkd'),
+      orderId, tags: $('#ed-tags').value.split(/[,，]/).map(s => s.trim()).filter(Boolean),
+      note: $('#ed-note').value.trim(), links: $('#ed-links').value.split('\n').map(s => s.trim()).filter(Boolean),
+      photos: [...editing.photos],
+      flags: editing.clearFlags ? flags.filter(f => AUTO_FLAGS.includes(f)) : flags,
+    };
+    if (!it.date && !next.fxDate) next.fxDate = date;
+    const removed = editing.removedPhotos;
+    await saveItem(next);
+    if (price[0] && price[0][0] !== S.settings?.lastCur) saveSettings({ lastCur: price[0][0] }).catch(() => {});
+    if (removed.length && S.assets) for (const p of removed) if (!photoInUse(p, next.id)) S.assets.delete(p).catch(() => {});
+    editing.newPhotos = [];
+    closeEditor(false);
+    toast(editing === null && !it.id ? '記低咗' : '已儲存');
+  } catch (e) {
+    btn.disabled = false;
+  }
+}
+
+/* ---------- category / order / rate ops ---------- */
+async function renameCategory(from, to) {
+  to = to.trim();
+  if (!to || to === from) return;
+  const cats = categories();
+  const merging = cats.includes(to);
+  const ids = [...S.items.values()].filter(i => i.cat === from).map(i => i.id);
+  await patchItems(ids, () => ({ cat: to }));
+  await saveSettings({ categories: merging ? cats.filter(c => c !== from) : cats.map(c => c === from ? to : c) });
+  toast(merging ? `已將「${from}」${ids.length} 件併入「${to}」` : `已改名做「${to}」`);
+}
+
+async function exportData(kind) {
+  if (!S.downloads) { toast('呢個檢視唔支援下載'); return; }
+  const items = [...S.items.values()].sort((a, b) => (a.cat || '').localeCompare(b.cat || '') || (a.date || '').localeCompare(b.date || ''));
+  const stamp = today();
+  try {
+    if (kind === 'json') {
+      const data = JSON.stringify({ exportedAt: new Date().toISOString(), settings: S.settings, orders: [...S.orders.values()], items }, null, 1);
+      await S.downloads.save({ filename: `敗家表-備份-${stamp}.json`, data });
+    } else {
+      if (!window.XLSX) { toast('Excel 元件載入唔到，請改用 JSON'); return; }
+      const ord = S.orders;
+      const rows = items.map(i => ({
+        分類: i.cat, 系列: i.series || '', 名稱: i.name, 數量: qtyOf(i), 日期: i.date || '', 狀態: STATUS[i.status] || '',
+        價錢: partsText(i.price), '價錢(HK$)': i.priceHKD || 0, 運費: partsText(i.fee), '運費(HK$)': i.feeHKD || 0,
+        賣出價: partsText(i.sold), '賣出(HK$)': i.soldHKD || 0, 訂單: i.orderId ? (ord.get(i.orderId)?.name || i.orderId) : '',
+        標籤: (i.tags || []).join(', '), 備註: i.note || '', 連結: (i.links || []).join('\n'), 舊截圖: (i.imgs || []).join('\n'),
+        待確認: (i.flags || []).join('、'), 來源: i.src || '',
+      }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), '物品');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([...ord.values()].map(o => ({ 訂單: o.name, 日期: o.date, 運費: partsText(o.fee), '運費(HK$)': o.feeHKD }))), '訂單');
+      const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+      await S.downloads.save({ filename: `敗家表-備份-${stamp}.xlsx`, data: new Blob([buf]) });
+    }
+    if (S.canWrite) await saveSettings({ lastBackup: new Date().toISOString() });
+    toast('已匯出');
+    render();
+  } catch (e) {
+    if (e?.code === 'declined') return;
+    console.error(e);
+    toast('匯出失敗：' + (e?.message || e?.code || '未知原因'));
+  }
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', async e => {
+  const t = e.target;
+  const tab = t.closest('nav.tabs button');
+  if (tab) return setView(tab.dataset.view);
+  if (t.closest('#fab')) return openEditor(null);
+  if (t.id === 'ov') return closeEditor(true);
+  const card = t.closest('.gcard[data-id]');
+  if (card) return openDetail(card.dataset.id);
+  const row = t.closest('.row[data-id]');
+  if (row) return openEditor(row.dataset.id);
+  const yr = t.closest('[data-year]');
+  if (yr) { S.filter = { q: '', cat: '', status: '', year: yr.dataset.year, flag: false }; S.shown = 80; return setView('list'); }
+  const rk = t.closest('.rank button[data-cat]');
+  if (rk) { S.filter = { q: '', cat: rk.dataset.cat, status: '', year: '', flag: false }; S.shown = 80; return setView('list'); }
+  const st = t.closest('#ed-status button');
+  if (st) {
+    for (const b of st.parentElement.children) b.setAttribute('aria-pressed', b === st);
+    $('#ed-soldbox').hidden = st.dataset.st === 'own' && !readParts($('#ed-sold')).length;
+    return;
+  }
+  const ap = t.closest('[data-addpart]');
+  if (ap) { $('#' + ap.dataset.addpart).insertAdjacentHTML('beforeend', partRow([S.settings?.lastCur || 'HKD', ''])); return; }
+  const x = t.closest('.part .x');
+  if (x) { const box = x.closest('.parts'); x.closest('.part').remove(); if (!box.children.length) box.insertAdjacentHTML('beforeend', partRow(['HKD', ''])); recalc(box.id); return; }
+  const rp = t.closest('[data-rmphoto]');
+  if (rp) {
+    const p = rp.dataset.rmphoto;
+    editing.photos = editing.photos.filter(q => q !== p);
+    if (editing.newPhotos.includes(p)) { editing.newPhotos = editing.newPhotos.filter(q => q !== p); S.assets?.delete(p).catch(() => {}); }
+    else editing.removedPhotos.push(p);
+    return renderPhotos();
+  }
+  const cv = t.closest('[data-coverphoto]');
+  if (cv) {
+    const p = cv.dataset.coverphoto;
+    editing.photos = [p, ...editing.photos.filter(q => q !== p)];
+    return renderPhotos();
+  }
+  const dv = t.closest('[data-dv]');
+  if (dv) return showDetailPhoto(+dv.dataset.dv);
+  if (t.closest('[data-dvstep]')) return showDetailPhoto(detail.i + +t.closest('[data-dvstep]').dataset.dvstep);
+  if (t.closest('[data-act="dedit"]')) { const id = detail.id; closeDetail(); return openEditor(id); }
+  if (t.closest('[data-act="dclose"]') || t.id === 'dov') return closeDetail();
+  const cact = t.closest('[data-cact]');
+  if (cact) return categoryAction(cact.dataset.cact, cact.closest('[data-cat]').dataset.cat);
+  const oact = t.closest('[data-oact]');
+  if (oact) return orderEdit(oact.closest('[data-order]').dataset.order);
+  const act = t.closest('[data-act]')?.dataset.act;
+  switch (act) {
+    case 'close': return closeEditor(true);
+    case 'save': return submitEditor();
+    case 'clearflags': editing.clearFlags = true; t.closest('.flagbox').innerHTML = '<span>儲存之後會清除待確認標記。</span>'; return;
+    case 'askdel': $('#ed-del').innerHTML = `<span class="confirm">真係刪除？刪咗就冇得還原。<button type="button" class="btn danger" data-act="dodel">確認刪除</button><button type="button" class="btn ghost" data-act="nodel">唔好</button></span>`; return;
+    case 'nodel': $('#ed-del').innerHTML = `<button type="button" class="btn danger" data-act="askdel">刪除呢件</button>`; return;
+    case 'dodel': {
+      const it = editing.it;
+      await deleteItem(it.id).catch(() => null);
+      if (S.assets) for (const p of new Set([...(it.photos || []), ...editing.photos])) if (!photoInUse(p, it.id)) S.assets.delete(p).catch(() => {});
+      editing.newPhotos = [];
+      closeEditor(false); toast('已刪除'); return;
+    }
+    case 'flagged': S.filter = { q: '', cat: '', status: '', year: '', flag: true }; S.shown = 80; return setView('list');
+    case 'all': S.filter = { q: '', cat: '', status: '', year: '', flag: false }; return setView('list');
+    case 'more': S.shown += 80; return renderList();
+    case 'runimport': runImport(); return render();
+    case 'exportpkg': return exportPkg();
+    case 'pkgyes': return doImportPkg();
+    case 'pkgno': PKG.file = null; return updatePkgStatus();
+    case 'backup': return exportData('xlsx');
+    case 'backupjson': return exportData('json');
+    case 'addcat': {
+      const v = $('#new-cat').value.trim();
+      if (!v || categories().includes(v)) return toast(v ? '已經有呢個分類' : '請輸入名稱');
+      await saveSettings({ categories: [...categories(), v] }); toast('已加分類'); return render();
+    }
+    case 'saverates': {
+      const rates = { ...(S.settings.rates || {}) };
+      for (const c of CURS) { const el = $('#rate-' + c); if (el && el.value !== '') rates[c] = parseFloat(el.value); }
+      await saveSettings({ rates, ratesDate: today() }); toast('匯率已儲存'); return render();
+    }
+  }
+});
+async function categoryAction(act, cat) {
+  const cats = categories();
+  const i = cats.indexOf(cat);
+  const box = $('#cat-edit');
+  if (act === 'up' || act === 'down') {
+    const j = act === 'up' ? i - 1 : i + 1;
+    [cats[i], cats[j]] = [cats[j], cats[i]];
+    await saveSettings({ categories: cats }); return render();
+  }
+  if (act === 'del') { await saveSettings({ categories: cats.filter(c => c !== cat) }); return render(); }
+  if (act === 'rename') {
+    box.innerHTML = `<div class="inline" style="margin-top:12px"><span>將「${esc(cat)}」改名做</span><input class="field" id="cat-new" value="${esc(cat)}"><button class="btn primary" id="cat-go">確認</button><button class="btn ghost" id="cat-x">取消</button></div>`;
+  } else {
+    box.innerHTML = `<div class="inline" style="margin-top:12px"><span>將「${esc(cat)}」全部物品併入</span><select class="field" id="cat-new">${cats.filter(c => c !== cat).map(c => `<option>${esc(c)}</option>`).join('')}</select><button class="btn primary" id="cat-go">確認合併</button><button class="btn ghost" id="cat-x">取消</button></div>`;
+  }
+  $('#cat-x').onclick = () => box.innerHTML = '';
+  $('#cat-go').onclick = async () => { $('#cat-go').disabled = true; await renameCategory(cat, $('#cat-new').value).catch(() => {}); render(); };
+}
+function orderEdit(oid) {
+  const o = S.orders.get(oid);
+  const box = $('#order-edit');
+  box.innerHTML = `<div style="display:grid;gap:8px;margin-top:12px">
+    <input class="field" id="o-name" value="${esc(o.name || '')}" placeholder="訂單名稱">
+    <div><label class="l">成張單嘅運費＋代購費</label>${partsEditor('o-fee', o.fee)}</div>
+    <div class="inline"><button class="btn primary" id="o-go">儲存訂單</button><button class="btn ghost" id="o-x">取消</button><span class="grow"></span><button class="btn danger" id="o-del">刪除訂單</button></div></div>`;
+  $('#o-x').onclick = () => box.innerHTML = '';
+  $('#o-go').onclick = async () => {
+    const fee = readParts($('#o-fee'));
+    const { id: _, ...body } = o;
+    await enqueue('orders/' + oid, () => S.db.doc('orders/' + oid).set({ ...body, name: $('#o-name').value.trim(), fee, feeHKD: toHKD(fee) })).catch(writeErr).catch(() => {});
+    toast('訂單已儲存');
+  };
+  $('#o-del').onclick = async () => {
+    const ids = [...S.items.values()].filter(i => i.orderId === oid).map(i => i.id);
+    if (ids.length) await patchItems(ids, () => ({ orderId: null })).catch(() => {});
+    await enqueue('orders/' + oid, () => S.db.doc('orders/' + oid).delete()).catch(writeErr).catch(() => {});
+    toast('訂單已刪除，物品保留');
+  };
+}
+
+function recalc(boxId) {
+  const map = { 'ed-price': '#ed-price-hkd', 'ed-fee': '#ed-fee-hkd', 'ed-sold': '#ed-sold-hkd' };
+  const out = map[boxId];
+  if (!out) return;
+  const parts = readParts($('#' + boxId));
+  $(out).value = parts.length ? toHKD(parts) : '';
+  if (boxId === 'ed-price') {
+    const missing = parts.filter(([c]) => !rate(c)).map(([c]) => CUR_SYM[c]);
+    $('#ed-price-note').textContent = missing.length ? `未有 ${missing.join('、')} 匯率，請手動填` : parts.some(([c]) => c !== 'HKD') ? '按設定匯率自動計，可以自己改' : '';
+  }
+}
+document.addEventListener('input', e => {
+  const t = e.target;
+  const box = t.closest('.parts');
+  if (box) return recalc(box.id);
+  if (t.id === 'f-q') { S.filter.q = t.value; S.shown = 80; return renderList(); }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  const box = t.closest('.parts');
+  if (box) return recalc(box.id);
+  if (t.id === 'f-cat') S.filter.cat = t.value;
+  else if (t.id === 'f-status') S.filter.status = t.value;
+  else if (t.id === 'f-year') S.filter.year = t.value;
+  else if (t.id === 'f-flag') S.filter.flag = t.checked;
+  else if (t.id === 'f-sort') { S.sort = t.value; try { localStorage.setItem('baijia-sort', t.value); } catch {} }
+  else if (t.id === 'ed-order') { $('#ed-neworder').hidden = t.value !== '__new'; return; }
+  else if (t.id === 'ed-file') { for (const f of t.files) uploadPhoto(f); t.value = ''; return; }
+  else if (t.id === 'pkg-file') { if (t.files[0]) askImportPkg(t.files[0]); t.value = ''; return; }
+  else if (t.id === 'imp-dir' || t.id === 'imp-files') { if (!IMP.running) { planImport([...t.files]); updateImportStatus(); } t.value = ''; return; }
+  else return;
+  S.shown = 80; renderList();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && editing) closeEditor(true);
+  else if (detail) {
+    if (e.key === 'Escape') closeDetail();
+    else if (e.key === 'ArrowRight') showDetailPhoto(detail.i + 1);
+    else if (e.key === 'ArrowLeft') showDetailPhoto(detail.i - 1);
+  }
+});
+document.addEventListener('paste', e => {
+  if (!editing || !S.assets || !S.canWrite) return;
+  for (const f of e.clipboardData?.files || []) if (f.type.startsWith('image/')) uploadPhoto(f);
+});
+
+
+/* ---------- 資料包 (local build only) ---------- */
+const PKG = { file: null, busy: false, msg: '', usage: null };
+function pkgStatusHTML() {
+  if (PKG.file) return `<div class="confirm" style="color:var(--ink)">匯入「${esc(PKG.file.name)}」會<b>取代呢部機而家所有紀錄同相片</b>${S.items.size ? `（而家有 ${S.items.size.toLocaleString()} 件）` : ''}。
+    <button class="btn danger" data-act="pkgyes">確認匯入</button><button class="btn ghost" data-act="pkgno">取消</button></div>`;
+  const u = PKG.usage;
+  const used = u?.usage ? ` · 呢部機已用 ${(u.usage / 1048576).toFixed(0)}MB` : '';
+  return `<div class="note">${PKG.msg ? esc(PKG.msg) : `資料只存喺呢部機入面。匯出嘅 .zip 包括所有紀錄同 ${LOCAL.photoCount().toLocaleString()} 張相${used}；喺另一部機匯入就會變成一模一樣。兩部機都有改動嘅話，以最後匯入嗰個為準。`}</div>`;
+}
+function updatePkgStatus() { for (const el of document.querySelectorAll('#pkg-status')) el.innerHTML = pkgStatusHTML(); }
+function askImportPkg(file) {
+  if (PKG.busy) return;
+  PKG.file = file; PKG.msg = '';
+  updatePkgStatus();
+}
+async function doImportPkg() {
+  const file = PKG.file;
+  if (!file || PKG.busy) return;
+  PKG.file = null; PKG.busy = true;
+  PKG.msg = '讀緊資料包…'; updatePkgStatus();
+  try {
+    const r = await LOCAL.importPackage(file, pct => { PKG.msg = `匯入緊… ${pct}%`; updatePkgStatus(); });
+    PKG.msg = `匯入完成：${r.photos.toLocaleString()} 張相。重新載入緊…`; updatePkgStatus();
+    setTimeout(() => location.reload(), 600);
+  } catch (e) {
+    console.error(e);
+    PKG.busy = false; PKG.msg = '匯入失敗：' + (e?.message || '檔案可能壞咗'); updatePkgStatus();
+  }
+}
+async function exportPkg() {
+  if (PKG.busy) return;
+  PKG.busy = true; PKG.msg = '整緊資料包…'; updatePkgStatus();
+  try {
+    const blob = await LOCAL.exportPackage(pct => { PKG.msg = `整緊資料包… ${Math.round(pct)}%`; updatePkgStatus(); });
+    await S.downloads.save({ filename: `敗家表資料包-${today()}.zip`, data: blob });
+    await saveSettings({ lastBackup: new Date().toISOString() });
+    PKG.msg = `已匯出（${(blob.size / 1048576).toFixed(0)}MB）。記得將個 .zip 存去安全嘅地方，例如雲端硬碟。`;
+  } catch (e) {
+    console.error(e);
+    PKG.msg = '匯出失敗：' + (e?.message || '未知原因');
+  }
+  PKG.busy = false; updatePkgStatus(); render();
+}
+LOCAL.usage().then(u => { PKG.usage = u; });
+LOCAL.persist();
+
+/* ---------- boot ---------- */
+async function boot() {
+  const initial = (location.hash || '').slice(1);
+  if (['overview', 'list', 'cabinet', 'settings'].includes(initial)) setView(initial);
+  const [db, assets, downloads, user] = await Promise.all(['db', 'assets', 'downloads', 'user'].map(n => window.claude?.use?.(n) ?? Promise.resolve(null)));
+  S.assets = assets; S.downloads = downloads;
+  if (!db) { S.dbMissing = true; return render(); }
+  S.db = db;
+  if (user) {
+    try { const w = await user.can('data.write'); if (w === false) S.canWrite = false; } catch {}
+  }
+  db.collection('chunks').onSnapshot(snap => {
+    S.items.clear(); S.chunkOf.clear(); S.chunkSize.clear();
+    for (const d of snap.docs) {
+      const its = (d.data() || {}).items || {};
+      let n = 0;
+      for (const [id, it] of Object.entries(its)) { if (!it) continue; S.items.set(id, { ...it, id }); S.chunkOf.set(id, d.id); n++; }
+      S.chunkSize.set(d.id, n);
+    }
+    S.loaded.chunks = true;
+    if (editing?.id && !S.items.has(editing.id)) closeEditor(false);
+    scheduleRender();
+  }, err => { console.error(err); toast('讀取資料出錯，請重新整理'); });
+  db.doc('meta/settings').onSnapshot(snap => {
+    S.settings = snap.exists ? snap.data() : { categories: [], rates: {} };
+    S.loaded.settings = true;
+    scheduleRender();
+  }, err => console.error(err));
+  db.collection('orders').onSnapshot(snap => {
+    S.orders.clear();
+    for (const d of snap.docs) S.orders.set(d.id, { ...d.data(), id: d.id });
+    S.loaded.orders = true;
+    scheduleRender();
+  }, err => console.error(err));
+}
+boot();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
