@@ -1,7 +1,7 @@
 // Offline support: the page itself is fetched fresh when online (so updates arrive) and
 // served from cache when offline; libraries and fonts are cached on first use.
-const CACHE = 'baijia-v1';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const CACHE = 'baijia-v7';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon-32.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)));
